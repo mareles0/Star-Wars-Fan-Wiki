@@ -69,20 +69,37 @@ class LoginView:
             return
         
         try:
-            # Autenticar usando Supabase
-            response = supabase.auth.sign_in_with_password({
-                "email": email,
-                "password": password
-            })
+            print(f"🔐 Tentando login: {email}")
             
-            if response.user:
+            # Autenticar usando Supabase (chamada síncrona)
+            response = supabase.auth.sign_in_with_password(
+                credentials={"email": email, "password": password}
+            )
+            
+            print(f"📦 Resposta recebida: {response}")
+            
+            if response and response.user:
+                # Preparar dados da sessão
+                user_data = {
+                    "id": response.user.id,
+                    "email": response.user.email,
+                    "is_admin": response.user.user_metadata.get("is_admin", False) if response.user.user_metadata else False,
+                    "access_token": response.session.access_token if response.session else None
+                }
+                
+                print(f"✅ Login OK: {user_data}")
+                
                 # Salvar sessão
-                session.login(response)
+                session.login(user_data)
                 
                 # Notificar sucesso
                 ui.notify(f'✅ Bem-vindo, {email}!', type='positive', position='top')
                 
                 # Redirecionar
                 ui.navigate.to('/wiki')
+            else:
+                print(f"❌ Resposta sem usuário")
+                ui.notify('❌ Email ou senha incorretos', type='negative', position='top')
         except Exception as e:
-            ui.notify('❌ Email ou senha incorretos', type='negative', position='top')
+            print(f"❌ Erro no login: {str(e)}")
+            ui.notify(f'❌ Erro: {str(e)}', type='negative', position='top')

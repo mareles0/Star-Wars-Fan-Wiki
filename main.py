@@ -26,9 +26,9 @@ def index():
     """Página inicial - redireciona para login ou wiki"""
     setup_theme()
     if session.is_authenticated():
-        ui.navigate.to('/wiki')
+        return ui.navigate.to('/wiki')
     else:
-        ui.navigate.to('/login')
+        return ui.navigate.to('/login')
 
 @ui.page('/login')
 def login_page():
@@ -83,6 +83,6 @@ if __name__ in {"__main__", "__mp_main__"}:
         port=8550,
         title='Star Wars Fan Wiki',
         dark=True,
-        reload=True,
-        show=True
+        reload=False,
+        show=False
     )

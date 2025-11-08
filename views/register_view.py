@@ -77,14 +77,22 @@ class RegisterView:
             return
         
         try:
-            # Registrar usando Supabase
-            response = supabase.auth.sign_up({
-                "email": email,
-                "password": password
-            })
+            print(f"📝 Tentando registrar: {email}")
             
-            if response.user:
+            # Registrar usando Supabase (chamada síncrona)
+            response = supabase.auth.sign_up(
+                credentials={"email": email, "password": password}
+            )
+            
+            print(f"📦 Resposta recebida: {response}")
+            
+            if response and response.user:
+                print(f"✅ Registro OK")
                 ui.notify('✅ Conta criada com sucesso! Faça login.', type='positive', position='top')
                 ui.navigate.to('/login')
+            else:
+                print(f"❌ Resposta sem usuário")
+                ui.notify('❌ Erro ao criar conta', type='negative', position='top')
         except Exception as e:
-            ui.notify('❌ Erro ao criar conta. Email já cadastrado?', type='negative', position='top')
+            print(f"❌ Erro no registro: {str(e)}")
+            ui.notify(f'❌ Erro: {str(e)}', type='negative', position='top')
