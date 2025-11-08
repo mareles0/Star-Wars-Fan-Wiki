@@ -2,7 +2,7 @@
 
 Sistema de gerenciamento de arquivos temático de Star Wars.
 
-**Acesse:** <https://andor-missions.onrender.com>
+**Acesse:** <https://star-wars-fan-wiki.onrender.com>
 
 ## � Tecnologias
 
