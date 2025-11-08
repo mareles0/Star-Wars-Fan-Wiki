@@ -23,12 +23,8 @@ def setup_theme():
 
 @ui.page('/')
 def index():
-    """Página inicial - redireciona para login ou wiki"""
-    setup_theme()
-    if session.is_authenticated():
-        return ui.navigate.to('/wiki')
-    else:
-        return ui.navigate.to('/login')
+    """Página inicial - redireciona para login"""
+    return ui.navigate.to('/login')
 
 @ui.page('/login')
 def login_page():
