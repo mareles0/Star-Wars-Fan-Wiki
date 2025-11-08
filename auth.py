@@ -140,6 +140,12 @@ class SessionManager:
         if self.user_data:
             return self.user_data.get("id", "")
         return ""
+    
+    def get_access_token(self) -> Optional[str]:
+        """
+        Retorna o access token do usuário autenticado
+        """
+        return self.access_token
 
 
 session = SessionManager()

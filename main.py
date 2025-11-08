@@ -1,93 +1,88 @@
-import flet as ft
+from nicegui import app, ui
 from config import COLORS
 from auth import session
 from views.login_view import LoginView
 from views.register_view import RegisterView
+from views.filesystem_view import FileSystemView
 from views.user_view import UserView
 from views.admin_view import AdminView
 
-# Compatibilidade entre versões do Flet: algumas versões expõem `ft.icons` (minúsculo)
-# outras expõem `ft.Icons` (maiúsculo). Criamos aliases para que ambos funcionem
-# no mesmo código — isso evita erros quando o app roda em ambientes com versões
-# diferentes (ex.: local vs Render).
-if not hasattr(ft, "Icons") and hasattr(ft, "icons"):
-    ft.Icons = ft.icons
-elif not hasattr(ft, "icons") and hasattr(ft, "Icons"):
-    ft.icons = ft.Icons
+def setup_theme():
+    """Configurar tema Star Wars"""
+    ui.dark_mode().enable()
+    ui.colors(
+        primary="#FFFFFF",  # Branco
+        secondary='#000000',  # Preto
+        accent="#FF3300",
+        dark='#000000',
+        positive='#21BA45',
+        negative='#C10015',
+        info='#31CCEC',
+        warning='#F2C037'
+    )
 
+@ui.page('/')
+def index():
+    """Página inicial - redireciona para login ou wiki"""
+    setup_theme()
+    if session.is_authenticated():
+        ui.navigate.to('/wiki')
+    else:
+        ui.navigate.to('/login')
 
-def main(page: ft.Page):
-    
-    
-    
-    page.title = "Andor Missions"
-    page.theme_mode = ft.ThemeMode.DARK
-    page.bgcolor = COLORS["background"]
-    page.padding = 0
-    
-    
-    
-    def on_login_success():
-        
-        if session.is_admin:
-            page.go("/admin")
-        else:
-            page.go("/user")
-    
-    def on_logout():
-        
-        page.go("/login")
-    
-    
-    def route_change(e):
-        
-        page.views.clear()
-        
-        
-        if page.route == "/login" or page.route == "/":
-            page.views.append(LoginView(page, on_login_success))
-        
-        elif page.route == "/register":
-            page.views.append(RegisterView(page))
-        
-        
-        elif page.route == "/user":
-            if not session.is_authenticated():
-                page.go("/login")
-                return
-            user_view = UserView(page, on_logout)
-            page.views.append(user_view)
-            
-            user_view.load_missions()
-        
-        elif page.route == "/admin":
-            if not session.is_authenticated():
-                page.go("/login")
-                return
-            if not session.is_admin:
-                page.go("/user")
-                return
-            admin_view = AdminView(page, on_logout)
-            page.views.append(admin_view)
-            
-            admin_view.load_missions()
-        
-        page.update()
-    
-    def view_pop(e):
-        
-        page.views.pop()
-        top_view = page.views[-1]
-        page.go(top_view.route)
-    
-    page.on_route_change = route_change
-    page.on_view_pop = view_pop
-    
-    
-    page.go("/login")
+@ui.page('/login')
+def login_page():
+    """Página de login"""
+    setup_theme()
+    LoginView()
 
+@ui.page('/register')
+def register_page():
+    """Página de registro"""
+    setup_theme()
+    RegisterView()
 
-if __name__ == "__main__":
+@ui.page('/wiki')
+def wiki_page():
+    """Página principal - Sistema de arquivos"""
+    setup_theme()
+    if not session.is_authenticated():
+        ui.navigate.to('/login')
+        return
     
-    ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=8550)
+    FileSystemView(is_admin=session.is_admin)
 
+@ui.page('/missions')
+def missions_user_page():
+    """Página de missões (usuário)"""
+    setup_theme()
+    if not session.is_authenticated():
+        ui.navigate.to('/login')
+        return
+    
+    UserView()
+
+@ui.page('/missions-admin')
+def missions_admin_page():
+    """Página de missões (admin)"""
+    setup_theme()
+    if not session.is_authenticated():
+        ui.navigate.to('/login')
+        return
+    
+    if not session.is_admin:
+        ui.navigate.to('/wiki')
+        return
+    
+    AdminView()
+
+# Iniciar aplicação
+if __name__ in {"__main__", "__mp_main__"}:
+    ui.run(
+        host='0.0.0.0',
+        port=8550,
+        title='Star Wars Fan Wiki',
+        dark=True,
+        reload=True,
+        show=True
+    )

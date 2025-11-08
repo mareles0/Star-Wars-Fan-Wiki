@@ -1,141 +1,86 @@
-import flet as ft
-
-from ui_components import *
+from nicegui import ui
+from config import COLORS
 from supabase_client import auth_manager
 
-
-class RegisterView(ft.View):
-    
-    def __init__(self, page: ft.Page):
-        self.page = page
+class RegisterView:
+    def __init__(self):
+        """Cria a interface de registro"""
         
-        self.email_field = create_input("Email")
-        self.password_field = create_input("Senha", password=True)
-        self.password_confirm_field = create_input("Confirmar Senha", password=True)
-        # criar card interno e wrapper para responsividade semelhante ao login
-        self._card_inner = ft.Container(
-            content=ft.Column(
-                [
-                    self.email_field,
-                    self.password_field,
-                    self.password_confirm_field,
-                    ft.Container(height=10),
-                    create_button(
-                        "Registrar",
-                        self.handle_register,
-                        icon=ft.Icons.PERSON_ADD,
-                        expand=False,
-                    ),
-                ],
-                spacing=15,
-            ),
-            bgcolor=COLORS["secondary"],
-            padding=30,
-            border_radius=12,
-            width=None,
-            expand=True,
-        )
-
-        card_wrapper = ft.Container(
-            content=self._card_inner,
-            alignment=ft.alignment.center,
-            padding=ft.padding.only(left=10, right=10),
-        )
-
-        super().__init__(
-            route="/register",
-            controls=[
-                ft.Container(
-                    content=ft.Column(
-                        [
-                            ft.Container(height=30),
-
-                            ft.IconButton(
-                                icon=ft.Icons.ARROW_BACK,
-                                icon_color=COLORS["text"],
-                                on_click=lambda _: page.go("/login"),
-                            ),
-
-                            create_title("NOVO AGENTE"),
-                            ft.Text(
-                                "Junte-se à Rebelião",
-                                size=16,
-                                color=COLORS["text"],
-                                opacity=0.7,
-                                text_align=ft.TextAlign.CENTER,
-                            ),
-                            ft.Container(height=20),
-
-                            card_wrapper,
-                        ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        scroll=ft.ScrollMode.AUTO,
-                    ),
-                    padding=20,
-                    expand=True,
-                )
-            ],
-            bgcolor=COLORS["background"],
-        )
-
-        # configurar resize handler e ajustar largura inicial
-        try:
-            self._orig_on_resize = getattr(self.page, "on_resize", None)
-            self.page.on_resize = lambda e: self._update_card_width()
-        except Exception:
-            pass
-
-        self._update_card_width()
+        # Container principal com fundo escuro
+        with ui.column().classes('w-full h-screen items-center justify-center').style(f'background-color: {COLORS["background"]}'):
+            
+            # Espaço superior
+            ui.space()
+            
+            # Título
+            ui.label('NOVO AGENTE').classes('text-6xl font-bold').style('color: #FFFFFF')
+            ui.label('Junte-se à Rebelião').classes('text-lg opacity-70').style('color: #FFFFFF')
+            
+            ui.space()
+            
+            # Card de registro
+            with ui.card().classes('w-96 p-8').style(f'background-color: {COLORS["secondary"]}'):
+                ui.label('Criar Conta').classes('text-2xl font-bold mb-4').style('color: #FFFFFF')
+                
+                # Campos de entrada
+                self.email_input = ui.input(
+                    label='Email',
+                    placeholder='seu@email.com'
+                ).classes('w-full').props('outlined dark')
+                
+                self.password_input = ui.input(
+                    label='Senha',
+                    placeholder='••••••••',
+                    password=True,
+                    password_toggle_button=True
+                ).classes('w-full').props('outlined dark')
+                
+                self.password_confirm_input = ui.input(
+                    label='Confirmar Senha',
+                    placeholder='••••••••',
+                    password=True,
+                    password_toggle_button=True
+                ).classes('w-full').props('outlined dark').on('keydown.enter', lambda: self.handle_register())
+                
+                ui.space()
+                
+                # Botão de registro (amarelo com texto preto)
+                ui.button(
+                    'Registrar',
+                    on_click=self.handle_register,
+                    icon='person_add'
+                ).classes('w-full').style('background-color: #FFD700 !important; color: #000000 !important; font-weight: bold; font-size: 16px;').props('unelevated')
+            
+            ui.space()
+            
+            # Citação
+            ui.label('"A esperança é como o sol. Você acredita nela apenas quando pode vê-la..."').classes('text-sm italic opacity-50').style(f'color: {COLORS["text"]}')
+            
+            ui.space()
     
-    def handle_register(self, e):
-        email = self.email_field.value
-        password = self.password_field.value
-        password_confirm = self.password_confirm_field.value
+    def handle_register(self):
+        """Processa o registro"""
+        email = self.email_input.value
+        password = self.password_input.value
+        password_confirm = self.password_confirm_input.value
         
         if not email or not password or not password_confirm:
-            show_snack(self.page, create_alert("Preencha todos os campos", is_error=True))
+            ui.notify('Preencha todos os campos', type='negative', position='top')
             return
         
         if password != password_confirm:
-            show_snack(self.page, create_alert("As senhas não coincidem", is_error=True))
+            ui.notify('As senhas não coincidem', type='negative', position='top')
             return
         
         if len(password) < 6:
-            show_snack(self.page, create_alert("A senha deve ter pelo menos 6 caracteres", is_error=True))
+            ui.notify('A senha deve ter no mínimo 6 caracteres', type='negative', position='top')
             return
         
-        # Registro via Supabase Auth (sempre como usuário normal)
-        result = auth_manager.register(email, password, is_admin=False)
+        # Registrar
+        result = auth_manager.register(email, password)
         
         if result:
-            show_snack(self.page, create_alert("Registro realizado com sucesso! Faça login."))
-            self.page.go("/login")
+            ui.notify('✅ Conta criada com sucesso! Faça login.', type='positive', position='top')
+            ui.navigate.to('/login')
         else:
-            show_snack(self.page, create_alert("Erro ao registrar. Tente outro email.", is_error=True))
-
-    def _update_card_width(self):
-        """Mesma lógica do login: ajusta largura conforme a janela."""
-        try:
-            w = None
-            if hasattr(self.page, "window_width") and self.page.window_width:
-                w = self.page.window_width
-            elif hasattr(self.page, "width") and self.page.width:
-                w = self.page.width
-            if not w:
-                w = 1000
-
-            if w < 700:
-                self._card_inner.width = None
-                self._card_inner.expand = True
-            else:
-                target = 760
-                max_allowed = max(400, int(w - 120))
-                self._card_inner.width = min(target, max_allowed)
-                self._card_inner.expand = False
-
-            try:
-                self.page.update()
-            except Exception:
-                pass
-        except Exception:
-            pass
+            ui.notify('❌ Erro ao criar conta. Email já cadastrado?', type='negative', position='top')

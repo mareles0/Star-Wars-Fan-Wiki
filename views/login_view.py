@@ -1,171 +1,84 @@
-import flet as ft
-from ui_components import *
+from nicegui import ui
+from config import COLORS
 from auth import session
 from supabase_client import auth_manager
 
-
-class LoginView(ft.View):
-    
-    
-    def __init__(self, page: ft.Page, on_login_success):
-        self.page = page
-        self.on_login_success = on_login_success
+class LoginView:
+    def __init__(self):
+        """Cria a interface de login"""
         
-        
-        self.email_field = create_input("Email")
-        self.password_field = create_input("Senha", password=True)
-        # criar o card (container interno) e manter referência para ajustes responsivos
-        self._card_inner = ft.Container(
-            content=ft.Column(
-                [
-                    create_subtitle("Acessar Sistema"),
-                    ft.Container(height=10),
-                    self.email_field,
-                    self.password_field,
-                    ft.Container(height=10),
-                                            create_button(
-                                                "Entrar",
-                                                self.handle_login,
-                                                icon=ft.Icons.LOGIN,
-                                                expand=False,
-                                            ),
-                    ft.Container(height=5),
-                    ft.Row(
-                        [
-                            ft.Text("Não tem conta?", color=COLORS["text"], opacity=0.7),
-                            ft.TextButton(
-                                "Registrar",
-                                on_click=lambda _: self.page.go("/register"),
-                            ),
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                    ),
-                ],
-                spacing=15,
-            ),
-            bgcolor=COLORS["secondary"],
-            padding=30,
-            border_radius=12,
-            # largura inicial; será ajustada no _update_card_width
-            width=None,
-            expand=True,
-        )
-
-        # container externo que centraliza o card
-        card_wrapper = ft.Container(
-            content=self._card_inner,
-            alignment=ft.alignment.center,
-            padding=ft.padding.only(left=10, right=10),
-        )
-
-        # montar a view
-        super().__init__(
-            route="/login",
-            controls=[
-                ft.Container(
-                    content=ft.Column(
-                        [
-                            ft.Container(height=50),
-                            create_title("ANDOR MISSIONS"),
-                            ft.Text(
-                                "Sistema de Missões Rebeldes",
-                                size=16,
-                                color=COLORS["text"],
-                                opacity=0.7,
-                                text_align=ft.TextAlign.CENTER,
-                            ),
-                            ft.Container(height=30),
-                            card_wrapper,
-                            ft.Container(height=20),
-                            ft.Text(
-                                '"As rebeliões são construídas na esperança."',
-                                size=14,
-                                color=COLORS["text"],
-                                opacity=0.5,
-                                italic=True,
-                                text_align=ft.TextAlign.CENTER,
-                            ),
-                        ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        scroll=ft.ScrollMode.AUTO,
-                    ),
-                    padding=20,
-                    expand=True,
-                )
-            ],
-            bgcolor=COLORS["background"],
-        )
-
-        # configurar resize handler para ajustar largura do card dinamicamente
-        try:
-            # armazena referência para restaurar caso necessário
-            self._orig_on_resize = getattr(self.page, "on_resize", None)
-            self.page.on_resize = lambda e: self._update_card_width()
-        except Exception:
-            pass
-
-        # aplicar largura inicial correta
-        self._update_card_width()
+        # Container principal com fundo escuro
+        with ui.column().classes('w-full h-screen items-center justify-center').style(f'background-color: {COLORS["background"]}'):
+            
+            # Espaço superior
+            ui.space()
+            
+            # Título
+            ui.label('STAR WARS FAN WIKI').classes('text-6xl font-bold').style('color: #FFFFFF')
+            ui.label('Sistema de Arquivos sobre Star Wars').classes('text-lg opacity-70').style('color: #FFFFFF')
+            
+            ui.space()
+            
+            # Card de login
+            with ui.card().classes('w-96 p-8').style(f'background-color: {COLORS["secondary"]}'):
+                ui.label('Acessar Sistema').classes('text-2xl font-bold mb-4').style('color: #FFFFFF')
+                
+                # Campos de entrada
+                self.email_input = ui.input(
+                    label='Email',
+                    placeholder='seu@email.com'
+                ).classes('w-full').props('outlined dark')
+                
+                self.password_input = ui.input(
+                    label='Senha',
+                    placeholder='••••••••',
+                    password=True,
+                    password_toggle_button=True
+                ).classes('w-full').props('outlined dark').on('keydown.enter', lambda: self.handle_login())
+                
+                ui.space()
+                
+                # Botão de login (fundo amarelo com texto preto)
+                ui.button(
+                    'Entrar',
+                    on_click=self.handle_login,
+                    icon='login'
+                ).classes('w-full').style('background-color: #FFD700 !important; color: #000000 !important; font-weight: bold; font-size: 16px;').props('unelevated')
+                
+                ui.space()
+                
+                # Link para registro
+                with ui.row().classes('w-full justify-center gap-2'):
+                    ui.label('Não tem conta?').classes('opacity-70').style(f'color: {COLORS["text"]}')
+                    ui.link('Registrar', '/register').classes('no-underline').style('color: #FFD700')
+            
+            ui.space()
+            
+            # Citação
+            ui.label('"As rebeliões são construídas na esperança."').classes('text-sm italic opacity-50').style(f'color: {COLORS["text"]}')
+            
+            ui.space()
     
-    def handle_login(self, e):
-        
-        email = self.email_field.value
-        password = self.password_field.value
+    def handle_login(self):
+        """Processa o login"""
+        email = self.email_input.value
+        password = self.password_input.value
         
         if not email or not password:
-            show_snack(self.page, create_alert("Preencha todos os campos", is_error=True))
+            ui.notify('Preencha todos os campos', type='negative', position='top')
             return
         
-      
+        # Autenticar
         result = auth_manager.login(email, password)
         
         if result:
-            
+            # Salvar sessão
             session.login(result)
             
-            show_snack(self.page, create_alert(f"Bem-vindo, {email}!"))
+            # Notificar sucesso
+            ui.notify(f'✅ Bem-vindo, {email}!', type='positive', position='top')
             
-            
-            self.on_login_success()
+            # Redirecionar
+            ui.navigate.to('/wiki')
         else:
-            show_snack(self.page, create_alert("Email ou senha incorretos", is_error=True))
-
-    def _update_card_width(self):
-        """Ajusta a largura do card conforme a largura da janela.
-
-        - Em telas pequenas (< 700) o card expande (mobile).
-        - Em telas grandes, aplica largura fixa (desktop) para ficar centralizado.
-        """
-        try:
-            # pegar largura atual da janela (várias versões do Flet expõem atributos diferentes)
-            w = None
-            if hasattr(self.page, "window_width") and self.page.window_width:
-                w = self.page.window_width
-            elif hasattr(self.page, "width") and self.page.width:
-                w = self.page.width
-            # fallback
-            if not w:
-                w = 1000
-
-            # breakpoint responsivo
-            if w < 700:
-                # mobile: expandir para a largura disponível
-                self._card_inner.width = None
-                self._card_inner.expand = True
-            else:
-                # desktop: largura fixa e centralizada
-                target = 760
-                # garantir que não exceda a janela com alguma margem
-                max_allowed = max(400, int(w - 120))
-                self._card_inner.width = min(target, max_allowed)
-                self._card_inner.expand = False
-
-            # solicitar atualização visual
-            try:
-                self.page.update()
-            except Exception:
-                pass
-        except Exception:
-            # se algo falhar, não quebrar a view
-            pass
-
+            ui.notify('❌ Email ou senha incorretos', type='negative', position='top')
