@@ -1,7 +1,7 @@
 from nicegui import ui
 from config import COLORS
 from auth import session
-from supabase_client import auth_manager
+from supabase_client import supabase
 
 class LoginView:
     def __init__(self):
@@ -68,17 +68,21 @@ class LoginView:
             ui.notify('Preencha todos os campos', type='negative', position='top')
             return
         
-        # Autenticar
-        result = auth_manager.login(email, password)
-        
-        if result:
-            # Salvar sessão
-            session.login(result)
+        try:
+            # Autenticar usando Supabase
+            response = supabase.auth.sign_in_with_password({
+                "email": email,
+                "password": password
+            })
             
-            # Notificar sucesso
-            ui.notify(f'✅ Bem-vindo, {email}!', type='positive', position='top')
-            
-            # Redirecionar
-            ui.navigate.to('/wiki')
-        else:
+            if response.user:
+                # Salvar sessão
+                session.login(response)
+                
+                # Notificar sucesso
+                ui.notify(f'✅ Bem-vindo, {email}!', type='positive', position='top')
+                
+                # Redirecionar
+                ui.navigate.to('/wiki')
+        except Exception as e:
             ui.notify('❌ Email ou senha incorretos', type='negative', position='top')

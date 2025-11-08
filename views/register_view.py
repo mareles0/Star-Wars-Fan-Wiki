@@ -1,6 +1,6 @@
 from nicegui import ui
 from config import COLORS
-from supabase_client import auth_manager
+from supabase_client import supabase
 
 class RegisterView:
     def __init__(self):
@@ -76,11 +76,15 @@ class RegisterView:
             ui.notify('A senha deve ter no mínimo 6 caracteres', type='negative', position='top')
             return
         
-        # Registrar
-        result = auth_manager.register(email, password)
-        
-        if result:
-            ui.notify('✅ Conta criada com sucesso! Faça login.', type='positive', position='top')
-            ui.navigate.to('/login')
-        else:
+        try:
+            # Registrar usando Supabase
+            response = supabase.auth.sign_up({
+                "email": email,
+                "password": password
+            })
+            
+            if response.user:
+                ui.notify('✅ Conta criada com sucesso! Faça login.', type='positive', position='top')
+                ui.navigate.to('/login')
+        except Exception as e:
             ui.notify('❌ Erro ao criar conta. Email já cadastrado?', type='negative', position='top')
