@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: andor-missions
+    name: Star-Wars-Fan-Wiki
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
