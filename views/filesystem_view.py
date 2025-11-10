@@ -173,9 +173,10 @@ class FileSystemView:
                         # Botão de download para arquivos
                         ui.button(icon='download', on_click=lambda i=item: self.download_file(i)).props('flat dense').style('color: #4CAF50')
                     
-                    # Botões de editar/deletar só aparecem se tiver permissão
+                    # Botões de editar/deletar/mover só aparecem se tiver permissão
                     if can_edit:
                         ui.button(icon='edit', on_click=lambda i=item: self.show_rename_dialog(i)).props('flat dense').style('color: #FFFFFF')
+                        ui.button(icon='drive_file_move', on_click=lambda i=item: self.show_move_dialog(i, category)).props('flat dense').style('color: #4A90E2')
                         ui.button(icon='delete', on_click=lambda i=item: self.show_delete_dialog(i)).props('flat dense').style('color: #FF0000')
     
     def open_folder_in_panel(self, folder, category):
@@ -476,6 +477,75 @@ class FileSystemView:
                 ui.notify('❌ Erro ao excluir', type='negative')
         except Exception as e:
             print(f"Erro ao excluir: {e}")
+            ui.notify(f'❌ Erro: {e}', type='negative')
+    
+    def show_move_dialog(self, item, category):
+        """Dialog para mover item para outra pasta"""
+        with ui.dialog() as dialog, ui.card().classes('p-6').style('min-width: 400px'):
+            ui.label('Mover Item').classes('text-2xl font-bold mb-4')
+            ui.label(f'Movendo: {item["name"]}').classes('mb-4 opacity-70')
+            
+            # Obter TODAS as pastas da categoria (não apenas da raiz)
+            folders = fs_db.get_all_folders_in_category(category=category, access_token=session.get_access_token())
+            
+            # Criar mapeamento nome -> ID
+            folder_map = {}
+            folder_names = ['📁 Raiz']  # Lista de nomes para exibição
+            folder_map['📁 Raiz'] = None
+            
+            # Construir lista de pastas disponíveis (excluindo a própria se for pasta)
+            for folder in folders:
+                if folder['id'] != item['id']:  # Não pode mover para si mesmo
+                    folder_name = f"📁 {folder['name']}"
+                    folder_names.append(folder_name)
+                    folder_map[folder_name] = folder['id']
+            
+            # Determinar pasta atual
+            current_parent = item.get('parent_id')
+            current_name = '📁 Raiz'
+            
+            # Encontrar o nome da pasta atual
+            for fname, fid in folder_map.items():
+                if fid == current_parent:
+                    current_name = fname
+                    break
+            
+            ui.label(f'Pasta atual: {current_name}').classes('mb-2 text-sm opacity-70')
+            
+            # Select com lista simples de nomes
+            folder_select = ui.select(
+                options=folder_names,
+                label='Nova pasta destino',
+                value=current_name
+            ).classes('w-full').props('outlined')
+            
+            with ui.row().classes('w-full justify-end gap-2 mt-4'):
+                ui.button('Cancelar', on_click=dialog.close).props('outline color=grey')
+                ui.button(
+                    'Mover', 
+                    on_click=lambda: self.move_item(item, folder_map[folder_select.value], dialog, category)
+                ).props('color=blue')
+        
+        dialog.open()
+    
+    def move_item(self, item, new_parent_id, dialog, category):
+        """Move um item para nova pasta"""
+        try:
+            result = fs_db.move_item(
+                item['id'], 
+                new_parent_id, 
+                access_token=session.get_access_token()
+            )
+            
+            if result:
+                ui.notify('✅ Item movido com sucesso', type='positive')
+                dialog.close()
+                # Recarregar painel da categoria
+                self.load_items_for_panel(category)
+            else:
+                ui.notify('❌ Erro ao mover item', type='negative')
+        except Exception as e:
+            print(f"Erro ao mover: {e}")
             ui.notify(f'❌ Erro: {e}', type='negative')
     
     def format_size(self, bytes_size):

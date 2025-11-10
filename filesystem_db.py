@@ -273,6 +273,22 @@ class FileSystemDB:
             print(f"❌ Erro ao listar itens: {e}")
             return []
     
+    def get_all_folders_in_category(self, category: str, access_token: str = None) -> List[Dict[str, Any]]:
+        """Busca TODAS as pastas de uma categoria (independente do parent_id)"""
+        try:
+            with httpx.Client() as client:
+                query = f"category=eq.{category}&is_folder=eq.true&order=name.asc"
+                
+                response = client.get(
+                    f"{self.base_url}/filesystem?{query}",
+                    headers=self._get_headers(access_token)
+                )
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            print(f"❌ Erro ao buscar pastas: {e}")
+            return []
+    
     def delete_file(self, file_id: int, access_token: str = None) -> bool:
         """Deleta um arquivo"""
         try:
@@ -392,6 +408,35 @@ class FileSystemDB:
         except Exception as e:
             print(f"❌ Erro ao buscar: {e}")
             return []
+    
+    def move_item(self, item_id: int, new_parent_id: Optional[int], access_token: str = None) -> bool:
+        """Move um item (pasta ou arquivo) para outro local
+        
+        Args:
+            item_id: ID do item a ser movido
+            new_parent_id: ID da nova pasta pai (None para raiz)
+            access_token: Token de autenticação
+        
+        Returns:
+            True se movido com sucesso, False caso contrário
+        """
+        try:
+            with httpx.Client() as client:
+                payload = {
+                    "parent_id": new_parent_id
+                }
+                
+                response = client.patch(
+                    f"{self.base_url}/filesystem?id=eq.{item_id}",
+                    headers=self._get_headers(access_token),
+                    json=payload
+                )
+                response.raise_for_status()
+                print(f"✅ Item {item_id} movido para pasta {new_parent_id}")
+                return True
+        except Exception as e:
+            print(f"❌ Erro ao mover item: {e}")
+            return False
 
 
 # Instância global
