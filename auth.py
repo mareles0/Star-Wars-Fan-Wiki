@@ -96,56 +96,72 @@ class AuthManager:
 
 
 class SessionManager:
-    """Gerencia sessão do usuário localmente"""
+    """Gerencia sessão do usuário usando app.storage.user (persiste entre páginas)"""
     
     def __init__(self):
-        self.user_data: Optional[Dict[str, Any]] = None
-        self.is_admin: bool = False
-        self.access_token: Optional[str] = None
+        """Usa app.storage.user que persiste com storage_secret"""
+        pass
     
     def login(self, user_data: Dict[str, Any]):
         """
-        Armazena dados do usuário após login
+        Armazena dados do usuário após login (persiste entre navegações)
         """
-        self.user_data = user_data
-        self.is_admin = user_data.get("is_admin", False)
-        self.access_token = user_data.get("access_token")
+        from nicegui import app
+        app.storage.user['user_data'] = user_data
+        app.storage.user['is_admin'] = user_data.get("is_admin", False)
+        app.storage.user['access_token'] = user_data.get("access_token")
     
     def logout(self):
         """
         Limpa dados da sessão
         """
-        self.user_data = None
-        self.is_admin = False
-        self.access_token = None
+        from nicegui import app
+        app.storage.user.clear()
     
     def is_authenticated(self) -> bool:
         """
         Verifica se há usuário autenticado
         """
-        return self.user_data is not None
+        from nicegui import app
+        return app.storage.user.get('user_data') is not None
     
     def get_user_email(self) -> str:
         """
         Retorna email do usuário autenticado
         """
-        if self.user_data:
-            return self.user_data.get("email", "")
+        from nicegui import app
+        user_data = app.storage.user.get('user_data')
+        if user_data:
+            return user_data.get("email", "")
         return ""
     
     def get_user_id(self) -> str:
         """
         Retorna ID do usuário autenticado
         """
-        if self.user_data:
-            return self.user_data.get("id", "")
+        from nicegui import app
+        user_data = app.storage.user.get('user_data')
+        if user_data:
+            return user_data.get("id", "")
         return ""
     
     def get_access_token(self) -> Optional[str]:
         """
         Retorna o access token do usuário autenticado
         """
-        return self.access_token
+        from nicegui import app
+        user_data = app.storage.user.get('user_data')
+        if user_data:
+            return user_data.get("access_token")
+        return None
+    
+    @property
+    def is_admin(self) -> bool:
+        """
+        Retorna se o usuário é admin
+        """
+        from nicegui import app
+        return app.storage.user.get('is_admin', False)
 
 
 session = SessionManager()

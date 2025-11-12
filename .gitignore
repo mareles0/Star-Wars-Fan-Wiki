@@ -43,6 +43,9 @@ env.bak/
 venv.bak/
 __pypackages__/
 
+# NiceGUI storage (gerado em runtime, não commitar)
+.nicegui/
+
 # Virtual environment for Pyright / Pylance
 venv/
 

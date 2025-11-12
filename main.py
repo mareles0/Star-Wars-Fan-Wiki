@@ -81,5 +81,6 @@ if __name__ in {"__main__", "__mp_main__"}:
         title='Star Wars Fan Wiki',
         dark=True,
         reload=False,
-        show=False
+        show=False,
+        storage_secret='star-wars-wiki-secret-key-2025'  # Chave para isolar sessões por usuário
     )
