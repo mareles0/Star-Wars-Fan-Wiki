@@ -15,18 +15,18 @@ class FileSystemView:
         self.current_category = "Séries"
         self.breadcrumb = []
         
-        # Header (deve ser top-level, não dentro de column)
-        with ui.header().classes('items-center justify-between px-6').style(f'background-color: {COLORS["secondary"]}'):
+        # Header responsivo
+        with ui.header().classes('items-center justify-between px-3 sm:px-6 py-2').style(f'background-color: {COLORS["secondary"]}'):
             with ui.column().classes('gap-0'):
-                ui.label('STAR WARS WIKI' + (' - ADMIN' if is_admin else '')).classes('text-3xl font-bold').style('color: #FFFFFF')
-                ui.label('Sistema de Arquivos Galáctico').classes('text-sm opacity-70').style('color: #FFFFFF')
+                ui.label('STAR WARS WIKI' + (' - ADMIN' if is_admin else '')).classes('text-xl sm:text-3xl font-bold').style('color: #FFFFFF')
+                ui.label('Sistema de Arquivos Galáctico').classes('text-xs sm:text-sm opacity-70').style('color: #FFFFFF')
             
             with ui.row().classes('gap-2'):
-                ui.icon('admin_panel_settings' if is_admin else 'person').classes('text-2xl').style(f'color: {COLORS["accent"]}')
-                ui.button('Sair', on_click=self.handle_logout, icon='logout').props('outline color=white')
+                ui.icon('admin_panel_settings' if is_admin else 'person').classes('text-xl sm:text-2xl').style(f'color: {COLORS["accent"]}')
+                ui.button('Sair', on_click=self.handle_logout, icon='logout').props('outline color=white size=sm')
         
-        # Container de conteúdo
-        with ui.column().classes('w-full flex-grow p-0').style(f'background-color: {COLORS["background"]}'):
+        # Container de conteúdo com padding responsivo
+        with ui.column().classes('w-full flex-grow p-2 sm:p-4').style(f'background-color: {COLORS["background"]}'):
             # Tabs de categorias
             with ui.tabs().classes('w-full').props('align=left inline-label').style('background-color: rgba(0,0,0,0.3)') as tabs:
                 tab_series = ui.tab('Séries', icon='tv').style('min-width: 150px')
@@ -55,26 +55,27 @@ class FileSystemView:
         self.breadcrumb = []
         
         # Breadcrumb
-        breadcrumb_container = ui.row().classes('gap-2 items-center')
+        breadcrumb_container = ui.row().classes('gap-2 items-center mb-2')
         
-        # Barra de ações
-        with ui.row().classes('w-full gap-2 items-center'):
-            search_input = ui.input(placeholder='Buscar...').classes('flex-grow').props('outlined dense')
-            
-            ui.button('Atualizar', on_click=lambda: self.load_items_for_panel(category), icon='refresh').props('color=blue').classes('text-white font-bold')
+        # Barra de busca (full width em mobile)
+        search_input = ui.input(placeholder='Buscar...').classes('w-full mb-2').props('outlined dense')
+        
+        # Barra de ações - wrap em mobile
+        with ui.row().classes('w-full gap-2 items-center flex-wrap'):
+            ui.button('Atualizar', on_click=lambda: self.load_items_for_panel(category), icon='refresh').props('color=blue size=sm').classes('text-white font-bold')
             
             # Verificar permissões
             can_create = self.is_admin or category == "Desenhos"
             
             if can_create:
-                ui.button('Nova Pasta', on_click=lambda: self.show_create_folder_dialog_for_panel(category), icon='create_new_folder').props('color=green').classes('text-white font-bold')
-                ui.button('Upload', on_click=lambda: self.show_upload_dialog_for_panel(category), icon='upload_file').props('color=orange').classes('text-white font-bold')
+                ui.button('Nova Pasta', on_click=lambda: self.show_create_folder_dialog_for_panel(category), icon='create_new_folder').props('color=green size=sm').classes('text-white font-bold')
+                ui.button('Upload', on_click=lambda: self.show_upload_dialog_for_panel(category), icon='upload_file').props('color=orange size=sm').classes('text-white font-bold')
         
         # Info do diretório
         folder_info = ui.label('').classes('text-sm opacity-70').style(f'color: {COLORS["text"]}')
         
-        # Grid de itens
-        items_grid = ui.grid(columns=4).classes('w-full gap-4')
+        # Grid responsivo: 1 coluna em mobile, 2 em tablet, 4 em desktop
+        items_grid = ui.grid(columns='1').classes('w-full gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4')
         
         # Armazenar referências por categoria
         if not hasattr(self, 'panels'):
@@ -134,7 +135,8 @@ class FileSystemView:
         item['is_admin'] = is_admin_item
         
         with panel['items_grid']:
-            with ui.card().classes('p-4 cursor-pointer hover:shadow-lg').style('background-color: rgba(255,255,255,0.05); min-width: 200px; max-width: 300px;'):
+            # Card responsivo: mobile (w-full) e desktop (min-width)
+            with ui.card().classes('p-3 cursor-pointer hover:shadow-lg w-full sm:w-auto').style('background-color: rgba(255,255,255,0.05); min-width: 160px; max-width: 100%;'):
                 # Verificar permissões
                 current_user_id = session.get_user_id()
                 created_by_id = item.get('created_by_id')
@@ -145,39 +147,39 @@ class FileSystemView:
                 # Ícone com badge de admin se necessário
                 with ui.row().classes('items-center gap-2'):
                     if item.get('is_folder', False):
-                        ui.icon('folder', size='3rem').style('color: #FF6B35')
+                        ui.icon('folder', size='2.5rem').style('color: #FF6B35')
                     else:
-                        ui.icon('insert_drive_file', size='3rem').style('color: #4A90E2')
+                        ui.icon('insert_drive_file', size='2.5rem').style('color: #4A90E2')
                     
                     # Badge de admin
                     if is_admin_item:
-                        ui.icon('admin_panel_settings').classes('text-xl').style('color: #FFD700')
+                        ui.icon('admin_panel_settings').classes('text-lg').style('color: #FFD700')
                 
-                # Nome com quebra de linha e overflow
-                ui.label(item['name']).classes('text-lg font-bold mt-2').style('color: #FFFFFF; word-break: break-all; overflow-wrap: break-word; max-width: 100%;')
+                # Nome com quebra de linha - fonte menor em mobile
+                ui.label(item['name']).classes('text-base sm:text-lg font-bold mt-2').style('color: #FFFFFF; word-break: break-word; overflow-wrap: break-word; line-height: 1.3; max-width: 100%;')
                 
                 # Metadados - mostrar criador
                 creator_email = item.get('created_by_email', '')
                 creator_name = creator_email.split('@')[0] if creator_email else 'Desconhecido'
                 
-                with ui.row().classes('items-center gap-1'):
+                with ui.row().classes('items-center gap-1 mt-1'):
                     if is_admin_item:
                         ui.icon('admin_panel_settings').classes('text-xs').style('color: #FFD700')
                     ui.label(f"por {creator_name}").classes('text-xs opacity-70').style('color: #FFFFFF')
                 
                 # Botões de ação (só aparecem se tiver permissão)
-                with ui.row().classes('gap-2 mt-2'):
+                with ui.row().classes('gap-1 mt-2 flex-wrap'):
                     if item.get('is_folder', False):
-                        ui.button(icon='folder_open', on_click=lambda i=item: self.open_folder_in_panel(i, category)).props('flat dense').style('color: #FFFFFF')
+                        ui.button(icon='folder_open', on_click=lambda i=item: self.open_folder_in_panel(i, category)).props('flat dense size=sm').style('color: #FFFFFF')
                     else:
                         # Botão de download para arquivos
-                        ui.button(icon='download', on_click=lambda i=item: self.download_file(i)).props('flat dense').style('color: #4CAF50')
+                        ui.button(icon='download', on_click=lambda i=item: self.download_file(i)).props('flat dense size=sm').style('color: #4CAF50')
                     
                     # Botões de editar/deletar/mover só aparecem se tiver permissão
                     if can_edit:
-                        ui.button(icon='edit', on_click=lambda i=item: self.show_rename_dialog(i)).props('flat dense').style('color: #FFFFFF')
-                        ui.button(icon='drive_file_move', on_click=lambda i=item: self.show_move_dialog(i, category)).props('flat dense').style('color: #4A90E2')
-                        ui.button(icon='delete', on_click=lambda i=item: self.show_delete_dialog(i)).props('flat dense').style('color: #FF0000')
+                        ui.button(icon='edit', on_click=lambda i=item: self.show_rename_dialog(i)).props('flat dense size=sm').style('color: #FFFFFF')
+                        ui.button(icon='drive_file_move', on_click=lambda i=item: self.show_move_dialog(i, category)).props('flat dense size=sm').style('color: #4A90E2')
+                        ui.button(icon='delete', on_click=lambda i=item: self.show_delete_dialog(i)).props('flat dense size=sm').style('color: #FF0000')
     
     def open_folder_in_panel(self, folder, category):
         """Abre uma pasta em um painel específico"""

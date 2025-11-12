@@ -7,40 +7,40 @@ class RegisterView:
         """Cria a interface de registro"""
         
         # Container principal com fundo escuro
-        with ui.column().classes('w-full h-screen items-center justify-center').style(f'background-color: {COLORS["background"]}'):
+        with ui.column().classes('w-full h-screen items-center justify-center px-4').style(f'background-color: {COLORS["background"]}'):
             
             # Espaço superior
             ui.space()
             
             # Título
-            ui.label('NOVO AGENTE').classes('text-6xl font-bold').style('color: #FFFFFF')
-            ui.label('Junte-se à Rebelião').classes('text-lg opacity-70').style('color: #FFFFFF')
+            ui.label('NOVO AGENTE').classes('text-3xl sm:text-5xl md:text-6xl font-bold text-center').style('color: #FFFFFF')
+            ui.label('Junte-se à Rebelião').classes('text-sm sm:text-base md:text-lg opacity-70 text-center').style('color: #FFFFFF')
             
             ui.space()
             
             # Card de registro
-            with ui.card().classes('w-96 p-8').style(f'background-color: {COLORS["secondary"]}'):
-                ui.label('Criar Conta').classes('text-2xl font-bold mb-4').style('color: #FFFFFF')
+            with ui.card().classes('w-full sm:w-96 p-6 sm:p-8').style(f'background-color: {COLORS["secondary"]}'):
+                ui.label('Criar Conta').classes('text-xl sm:text-2xl font-bold mb-4').style('color: #FFFFFF')
                 
                 # Campos de entrada
                 self.email_input = ui.input(
                     label='Email',
                     placeholder='seu@email.com'
-                ).classes('w-full').props('outlined dark')
+                ).classes('w-full').props('outlined dark dense')
                 
                 self.password_input = ui.input(
                     label='Senha',
                     placeholder='••••••••',
                     password=True,
                     password_toggle_button=True
-                ).classes('w-full').props('outlined dark')
+                ).classes('w-full').props('outlined dark dense')
                 
                 self.password_confirm_input = ui.input(
                     label='Confirmar Senha',
                     placeholder='••••••••',
                     password=True,
                     password_toggle_button=True
-                ).classes('w-full').props('outlined dark').on('keydown.enter', lambda: self.handle_register())
+                ).classes('w-full').props('outlined dark dense').on('keydown.enter', lambda: self.handle_register())
                 
                 ui.space()
                 
@@ -49,12 +49,12 @@ class RegisterView:
                     'Registrar',
                     on_click=self.handle_register,
                     icon='person_add'
-                ).classes('w-full').style('background-color: #FFD700 !important; color: #000000 !important; font-weight: bold; font-size: 16px;').props('unelevated')
+                ).classes('w-full').style('background-color: #FFD700 !important; color: #000000 !important; font-weight: bold; font-size: 14px; padding: 10px;').props('unelevated')
             
             ui.space()
             
             # Citação
-            ui.label('"A esperança é como o sol. Você acredita nela apenas quando pode vê-la..."').classes('text-sm italic opacity-50').style(f'color: {COLORS["text"]}')
+            ui.label('"A esperança é como o sol. Você acredita nela apenas quando pode vê-la..."').classes('text-xs sm:text-sm italic opacity-50 text-center px-4').style(f'color: {COLORS["text"]}')
             
             ui.space()
     

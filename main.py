@@ -20,6 +20,8 @@ def setup_theme():
         info='#31CCEC',
         warning='#F2C037'
     )
+    # Adicionar meta tag para responsividade mobile
+    ui.add_head_html('<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">')
 
 @ui.page('/')
 def index():
@@ -47,7 +49,6 @@ def wiki_page():
         return
     
     FileSystemView(is_admin=session.is_admin)
-
 @ui.page('/missions')
 def missions_user_page():
     """Página de missões (usuário)"""
